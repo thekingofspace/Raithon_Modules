@@ -15,9 +15,15 @@ do -- Initial Constructor
         TrackedAspects = require(script:WaitForChild("ClientListener"))
     else
         TrackedAspects = require("@self/ServerListener")
+        print(`Replit booted up, clients should be listening to signals. use replit.check() to ensure.`)
     end
 end
 
 local module = {}
 
-return module
+export type Replit = {
+    Check:() -> (boolean, string?)
+}
+
+
+return module::Replit
