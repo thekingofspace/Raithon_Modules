@@ -2,8 +2,8 @@ local RunService = game:GetService("RunService")
 local Signals = require("@self/Signals")
 
 type TrackedAspects = {
-    CustomSignals:{Signals.Signaler<any>};
-    RealSignals:{RBXScriptConnection};
+    CustomSignals:{[string]:Signals.Signaler<any>};
+    RealSignals:{[string]:RBXScriptConnection};
 }
 
 local TrackedAspects:TrackedAspects = nil
@@ -27,12 +27,4 @@ export type Server = {
     
 }
 
-export type Client = {
-    ReceiveReplit: ()->();
-}
-
-export type ReplitInstance = {
-    State: {}
-}
-
-return module :: (Server & Client)
+return module::Replit
