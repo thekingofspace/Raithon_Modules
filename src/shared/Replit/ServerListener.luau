@@ -1,10 +1,9 @@
+---------------------------------------------------------------------------- VARS
 local module = {}
 local Players = game:GetService("Players")
 local ReplicationCache:{[Player]:any} = {}
----------------------------------------------------------------------------- VARS
-
----------------------------------------------------------------------------- EVENTS
-Players.PlayerAdded:Connect(function(targetPlayer)
+---------------------------------------------------------------------------- FUNCTIONS
+local function ApplyPlayer(targetPlayer)
     local PlayerFolder = targetPlayer.PlayerGui:FindFirstChild("REPLIT_REPLICATION")
     if not PlayerFolder then
         PlayerFolder = Instance.new("Folder")
@@ -14,6 +13,12 @@ Players.PlayerAdded:Connect(function(targetPlayer)
     ReplicationCache[targetPlayer] = {
         Folder = PlayerFolder
     }
-end)
+end
+
+---------------------------------------------------------------------------- EVENTS
+for _, Player in ipairs(Players:GetPlayers()) do
+    task.spawn(ApplyPlayer, Player)
+end
+Players.PlayerAdded:Connect(ApplyPlayer)
 
 return module
