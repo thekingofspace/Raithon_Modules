@@ -1,14 +1,15 @@
 ---------------------------------------------------------------------------- VARS
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local module = {}
+--[=[
+	Standard utils files for the whole project
+]=]
+local SharedUtils = {}
 export type Status = {
 
 }
 ---------------------------------------------------------------------------- MODULE
 --[=[
-	@within SharedUtils
-
 	**CLIENT SCOPE**
     * Will wait 500 seconds for the event if it is not found it will spawn a error
 
@@ -17,7 +18,7 @@ export type Status = {
 
 	@return Event for things
 ]=]
-function module.FindEvent():RemoteEvent
+function SharedUtils.FindEvent():RemoteEvent
     if RunService:IsClient() == true then
         return ReplicatedStorage:WaitForChild("REPLIT_REMOTE_EVENT", 500)
     end
@@ -32,4 +33,4 @@ function module.FindEvent():RemoteEvent
     return Event
 end
 
-return module
+return SharedUtils
