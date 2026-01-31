@@ -1,6 +1,8 @@
 ---------------------------------------------------------------------------- VARS
 local module = {}
 local Players = game:GetService("Players")
+local SharedUtils = require("./SharedUtils")
+local GlobalEvent = SharedUtils.FindEvent()
 local ReplicationCache:{[Player]:any} = {}
 ---------------------------------------------------------------------------- FUNCTIONS
 local function ApplyPlayer(targetPlayer)
@@ -14,7 +16,6 @@ local function ApplyPlayer(targetPlayer)
         Folder = PlayerFolder
     }
 end
-
 ---------------------------------------------------------------------------- EVENTS
 for _, Player in ipairs(Players:GetPlayers()) do
     task.spawn(ApplyPlayer, Player)
