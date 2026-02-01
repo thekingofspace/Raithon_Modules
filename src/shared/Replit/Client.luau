@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------- VARS
 local Players = game:GetService("Players")
 local module = {}
-local Signals = require(script.Parent.Signals)
+local Signals = require(script.Parent:WaitForChild("Signals"))
 local SharedNames = require(script.Parent:WaitForChild("NameSpaces"))
 local Utils = require(script.Parent:WaitForChild("Utils"))
 local Event = Utils.GetEvent()

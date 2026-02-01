@@ -4,9 +4,9 @@ local ServerStorage = game:GetService("ServerStorage")
 local module = {}
 local Utils = require("./Utils")
 local Names = require("./NameSpaces")
+local configs = require("./Configs")
 local Signals = require("./Signals")
 local Event = Utils.GetEvent()
-local ToggleWarns = true
 ----------------------------------------------------------------------- TYPES
 export type Status = {
     Status: "pending" | "dead" | "complete";
@@ -86,7 +86,7 @@ Players.PlayerRemoving:Connect(playerLeft)
 ----------------------------------------------------------------------- MODULE
 
 function module.ReplicateTo(Instance:Instance, Targets:{Player}):{Status}
-    if not Instance:IsDescendantOf(ServerStorage) and ToggleWarns == true then
+    if not Instance:IsDescendantOf(ServerStorage) and configs.ToggleWarnings == false then
         warn("[REPLIT] - Instances are recommended to be kept in server storage.")
     end
     local Ret = {}
