@@ -11,7 +11,7 @@ export type Replit = {
     OnReplication:Signals.Signaler<Instance>,
 
     ReplicateTo:(Instance:Instance, Targets:{Player}) -> {Status},
-    UnReplicate:(Instance:Instance, Targets:{Player}) -> ()
+    Unreplicate:(Instance:Instance, Targets:{Player}) -> ()
 }
 
 return TargetModule::Replit
