@@ -1,32 +1,33 @@
 local Players = game:GetService("Players")
 local ServerStorage = game:GetService("ServerStorage")
 ----------------------------------------------------------------------- VARS
-local module = {}
 local Utils = require("./Utils")
 local Names = require("./NameSpaces")
-local configs = require("./Configs")
+local configs = require("./ReplitConfigs")
 local Signals = require("./Signals")
 local Event = Utils.GetEvent()
 ----------------------------------------------------------------------- TYPES
-export type Status = {
-    Status: "pending" | "dead" | "complete";
-    id:string;
-    TrackedObject:Instance,
-    Owner:Player,
-    Changed:Signals.Signaler<any>
+type module = {
+    Replicated: typeof(Utils.GetEnd());
+    
+    TrackedInstances: {[string]:Instance};
+    TrackedStatuses: {[string]:Utils.Status};
+    TrackedSignals: {[string]:RBXScriptConnection};
+    UID_Registry: {[Instance]:string};
 }
 ----------------------------------------------------------------------- CONSTRUCTION
+local module = {}::module
 module.Replicated = Utils.GetEnd()
-module.TrackedInstances = {}::{[Instance]:string}
-module.Status = {}::{[string]:Status}
+module.TrackedInstances = {}
+module.TrackedStatuses = {}
 module.TrackedSignals = {}
-module.ID_Track = {}::{[string]:Instance}
+module.UID_Registry = {}
 ----------------------------------------------------------------------- CASE SWITCH
 local Switch = {
     ["instanceFound"] = function(Player:Player, StatusID:string)
-        local Status = module.Status[StatusID]
+        local Status = module.TrackedStatuses[StatusID]
         if not Status then return end
-        module.Status[StatusID] = nil
+        module.TrackedStatuses[StatusID] = nil
         Status.Status = "complete"
         Status.TrackedObject:Destroy()
         Status.TrackedObject = nil
@@ -50,6 +51,7 @@ Switch = setmetatable(Switch, {
 local function OnEventRecieve(Player:Player, Topic:string, ...)
     Switch(Topic, Player, ...)
 end
+
 local function UpdatePlayer(Player:Player)
     if Player.PlayerGui:FindFirstChild(Names.ReplicationTarget) then
         return
@@ -58,6 +60,7 @@ local function UpdatePlayer(Player:Player)
     TargetFolder.Name = Names.ReplicationTarget
     TargetFolder.Parent = Player.PlayerGui
 end
+
 local function playerLeft(Player:Player)
     for I, Status in pairs(module.Status) do
         if Status.Owner == Player then
@@ -68,29 +71,36 @@ local function playerLeft(Player:Player)
             Status.Changed:Fire()
         end
     end
-    if Player:FindFirstAncestorOfClass("PlayerGui") then
-        Player:FindFirstAncestorOfClass("PlayerGui"):FindFirstChild(Names.ReplicationTarget):Destroy()
+    local playerGui = Player:FindFirstChildOfClass("PlayerGui")
+    if playerGui then
+        playerGui:FindFirstChild(Names.ReplicationTarget):Destroy()
     end
 end
 
 local function CreateStatus(id:string, OwnedObject:Instance, Owner:Player)
-    local Status = {Status = "pending", id = id, TrackedObject = OwnedObject, Owner = Owner, Changed = Signals()}
+    local Status = {
+        Status = "pending";
+        UID = id;
+        TrackedObject = OwnedObject;
+        Owner = Owner;
+        Changed = Signals();
+    }
     module.Status[id] = Status
     return Status
 end
 
 local function SetupObject(Instance:Instance)
-    if not module.TrackedInstances[Instance] then
+    if not module.UID_Registry[Instance] then
         local ID = Utils.GenerateGUID()
-        module.TrackedInstances[Instance] = ID
-        module.ID_Track[ID] = Instance
+        module.UID_Registry[Instance] = ID
+        module.TrackedInstances[ID] = Instance
         module.TrackedSignals[ID] = Instance.Destroying:Connect(function()
             module.UnReplicate(Instance, Players:GetPlayers())
             module.TrackedSignals[ID]:Disconnect()
-            module.ID_Track[ID] = nil
+            module.TrackedInstances[ID] = nil
             module.TrackedSignals[ID] = nil
-            module.TrackedInstances[Instance] = nil
-            Instance = nil
+            module.UID_Registry[Instance] = nil
+            Instance = nil::any
             ID = nil
         end)
     end
@@ -115,7 +125,7 @@ function module.ReplicateTo(Instance:Instance, Targets:{Player}):{Status}
         local PlayerTargetFolder = item.PlayerGui:WaitForChild(Names.ReplicationTarget)
         local PlayerObject = Instance:Clone()
         local Status = CreateStatus(Utils.GenerateGUID(), PlayerObject, item)
-        Utils.ToConfig(module.TrackedInstances[Instance], Status.id).Parent = PlayerObject
+        Utils.ToConfig(module.UID_Registry[Instance], Status.UID).Parent = PlayerObject
         PlayerObject.Parent = PlayerTargetFolder
         table.insert(Ret, Status)
     end
@@ -124,10 +134,10 @@ function module.ReplicateTo(Instance:Instance, Targets:{Player}):{Status}
 end
 
 function module.UnReplicate(Instance:Instance, Targets:{Player})
-    if not module.TrackedInstances[Instance] then
+    if not module.UID_Registry[Instance] then
         return
     end
-    local ID:string = module.TrackedInstances[Instance]
+    local ID:string = module.UID_Registry[Instance]
     for _, item in ipairs(Targets) do
         Event:FireClient(item, "RemoveInstance", ID)
     end

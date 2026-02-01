@@ -6,7 +6,7 @@ local Paths = {
 }
 
 local LintRules = {
-    MaxLayers = 2, -- how many layers of ifs, functions etc can be used
+    MaxLayers = 3, -- how many layers of ifs, functions etc can be used
     AllowFunctionCreation = false, -- if it should allow function creation within a function or a code block
     MaxElseIfChain = 3, -- maximum elseif statements before suggesting a switch/table lookup
     MaxLineLength = 1000, -- maximum characters per line

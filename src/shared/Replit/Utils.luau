@@ -2,8 +2,17 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local NameSpaces = require(script.Parent.NameSpaces)
+local Signals = require(script.Parent.Signals)
 local SharedNames = require(script.Parent:WaitForChild("NameSpaces"))
 local module = {}
+
+export type Status = {
+    Status: "pending" | "dead" | "complete";
+    id: string;
+    TrackedObject: Instance,
+    Owner: Player,
+    Changed: Signals.Signaler<any>
+}
 
 export type Config = {
     UID:string;

@@ -2,14 +2,9 @@ local RunService = game:GetService("RunService")
 local IsClient = RunService:IsClient()
 local TargetModule = IsClient and require(script:WaitForChild("Client")) or require("@self/Server")
 local Signals = require("@self/Signals")
+local Utils = require(script.Utils)
 
-export type Status = {
-    Status: "pending" | "dead" | "complete";
-    id:string;
-    TrackedObject:Instance,
-    Owner:Player,
-    Changed:Signals.Signaler<any>
-}
+export type Status = Utils.Status
 
 export type Replit = {
     Replicated:Folder,
