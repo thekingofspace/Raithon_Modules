@@ -8,7 +8,7 @@ local module = {}
 
 export type Status = {
     Status: "pending" | "dead" | "complete";
-    id: string;
+    StatusID: string;
     TrackedObject: Instance,
     Owner: Player,
     Changed: Signals.Signaler<any>
@@ -39,7 +39,7 @@ end
 
 function module.GetEnd():Folder
     if RunService:IsClient() == true then
-        return game.ReplicatedStorage:WaitForChild(SharedNames.ReplicationEndPoint)
+        return game.ReplicatedStorage:WaitForChild(SharedNames.ReplicationEndPoint,500)
     end
 
     local Event = ReplicatedStorage:FindFirstChild(SharedNames.ReplicationEndPoint)

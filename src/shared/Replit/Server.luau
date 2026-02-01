@@ -8,8 +8,8 @@ local Signals = require("./Signals")
 local Event = Utils.GetEvent()
 ----------------------------------------------------------------------- TYPES
 type module = {
-    Replicated: typeof(Utils.GetEnd());
-    
+    Replicated: Folder;
+
     TrackedInstances: {[string]:Instance};
     TrackedStatuses: {[string]:Utils.Status};
     TrackedSignals: {[string]:RBXScriptConnection};
@@ -80,7 +80,7 @@ end
 local function CreateStatus(id:string, OwnedObject:Instance, Owner:Player)
     local Status = {
         Status = "pending";
-        UID = id;
+        StatusID = id;
         TrackedObject = OwnedObject;
         Owner = Owner;
         Changed = Signals();
@@ -125,7 +125,7 @@ function module.ReplicateTo(Instance:Instance, Targets:{Player}):{Status}
         local PlayerTargetFolder = item.PlayerGui:WaitForChild(Names.ReplicationTarget)
         local PlayerObject = Instance:Clone()
         local Status = CreateStatus(Utils.GenerateGUID(), PlayerObject, item)
-        Utils.ToConfig(module.UID_Registry[Instance], Status.UID).Parent = PlayerObject
+        Utils.ToConfig(module.UID_Registry[Instance], Status.StatusID).Parent = PlayerObject
         PlayerObject.Parent = PlayerTargetFolder
         table.insert(Ret, Status)
     end

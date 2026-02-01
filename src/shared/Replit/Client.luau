@@ -8,7 +8,7 @@ local ReplicatedFolder = Utils.GetEnd()
 
 ----------------------------------------------------------------------- TYPES
 type module = {
-    Replicated: typeof(Utils.GetEnd());
+    Replicated: Folder;
     
     TrackedInstances: {[string]:Instance};
     TrackedEvents: {[string]:RBXScriptConnection};
