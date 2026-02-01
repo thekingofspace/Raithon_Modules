@@ -77,11 +77,8 @@ local function onClientEvent(topic:string, options)
     end
 end
 
-
 ---------------------------------------------------------------------------- EVENTS
-do  -- setup stuff
-    UI_Folder.ChildAdded:Connect(onChildAdded)
-    GlobalEvent.OnClientEvent:Connect(onClientEvent)
-end
+UI_Folder.ChildAdded:Connect(onChildAdded)
+GlobalEvent.OnClientEvent:Connect(onClientEvent)
 
 return module

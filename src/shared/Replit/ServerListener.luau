@@ -50,12 +50,10 @@ end
 
 ---------------------------------------------------------------------------- EVENTS
 
-do
-    for _, Player in ipairs(Players:GetPlayers()) do
-        task.spawn(ApplyPlayer, Player)
-    end
-    Players.PlayerAdded:Connect(ApplyPlayer)
-    GlobalEvent.OnServerEvent:Connect(remoteFired)
+for _, Player in ipairs(Players:GetPlayers()) do
+    task.spawn(ApplyPlayer, Player)
 end
+Players.PlayerAdded:Connect(ApplyPlayer)
+GlobalEvent.OnServerEvent:Connect(remoteFired)
 
 return module
