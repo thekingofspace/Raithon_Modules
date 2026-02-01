@@ -1,30 +1,22 @@
----------------------------------------------------------------------------- VARS
 local RunService = game:GetService("RunService")
-
 local IsClient = RunService:IsClient()
-if IsClient == true then script:WaitForChild("SharedUtils"); script:WaitForChild("Signals") end
-local Objects = require("@self/SharedUtils")
-local module = IsClient == true and require(script:WaitForChild("ClientListener")) or require("@self/ServerListener")
----------------------------------------------------------------------------- BUILDER AND TYPES
---[=[
-	A library for handling replication
+local TargetModule = IsClient and require(script:WaitForChild("Client")) or require("@self/Server")
+local Signals = require("@self/Signals")
 
-	### Example usage
-
-	```lua
-
-	```
-]=]
-
-export type Replit = {
-    -- Server Methods
-    Check: () -> (boolean, string?);
-    ReplicateTo: (players:{Player}, isntance:Instance) -> {[string]:Status}; -- returns a dict mapping config id to status object
-
-    -- Client Methods
+export type Status = {
+    Status: "pending" | "dead" | "complete";
+    id:string;
+    TrackedObject:Instance,
+    Owner:Player,
+    Changed:Signals.Signaler<any>
 }
 
+export type Replit = {
+    Replicated:Folder,
+    OnReplication:Signals.Signaler<Instance>,
 
-export type Status = Objects.Status
+    ReplicateTo:(Instance:Instance, Targets:{Player}) -> {Status},
+    UnReplicate:(Instance:Instance, Targets:{Player}) -> ()
+}
 
-return module::Replit
+return TargetModule::Replit
