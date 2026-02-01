@@ -67,7 +67,7 @@ local handlers = {
             instance[prop_name] = prop_value
         end
         module.CustomSignals[id]:Fire()
-    end
+    end;
 }
 
 local function onClientEvent(topic:string, options)

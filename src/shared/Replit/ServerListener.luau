@@ -6,16 +6,19 @@ local Signals = require(script.Parent.Signals)
 
 ---------------------------------------------------------------------------- VARS
 
-local module = {}::{
+type module ={
     CustomSignals: {[string]:Signals.Signaler<any>};
     RealSignals: {[string]:RBXScriptSignal};
     Pending: {[string]:Instance};
-    ReplicationCache : {[Player ]:any}
+    ReplicationCache : {[Player ]:any};
 }
+
+local module:module = {}
 module.CustomSignals = {}
 module.RealSignals = {}
 module.Pending = {} :: {[string]:Instance}
 module.ReplicationCache = {}
+module.PendingSinks = {}
 
 
 local GlobalEvent =  SharedUtils.FindEvent()
@@ -46,7 +49,6 @@ local function remoteFired(player:Player, topic:string, options)
         callback(options)
     end
 end
-
 
 ---------------------------------------------------------------------------- EVENTS
 
