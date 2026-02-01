@@ -9,6 +9,8 @@ export type Config = {
 
 }
 
+---------------------------------------------------------------------------- VARS
+local SharedUtils = require(script.Parent:WaitForChild("SharedUtils"))
 local player = Players.LocalPlayer
 local playerGui = player:FindFirstChildOfClass("PlayerGui")
 local UI_Folder:Folder = playerGui:WaitForChild("REPLIT_REPLICATION", 500)
@@ -17,7 +19,7 @@ local ReplitFolder = Instance.new("Folder")
 ReplitFolder.Name = "ReplitFolder"
 ReplitFolder.Parent = ReplicatedStorage
 
-local remote:RemoteEvent = script.Parent:WaitForChild("ReplitRemote")
+local GlobalEvent = SharedUtils.FindEvent()
 
 local weak = {
     __mode = "kv"
@@ -42,17 +44,12 @@ function module.Track(instance:Instance)
 end
 
 local function onChildAdded(child:Instance)
-    local config:Config
-    do 
-        local instance = child:WaitForChild("REPLIT_CONFIG_OBJECT")
-        config = instance and instance:GetAttributes()
-        if not config then return end
-    end
-
+    local config = SharedUtils.ReadConfig(child)
     local replit = child:Clone()
+    replit.WaitForChild()
     replit.Parent = ReplitFolder
     
-    remote:FireServer( "ReplitReceived" , {
+    GlobalEvent:FireServer( "ReplitReceived" , {
         ID = config.InstanceID
     })
     
@@ -80,10 +77,11 @@ local function onClientEvent(topic:string, options)
     end
 end
 
+
+---------------------------------------------------------------------------- EVENTS
 do  -- setup stuff
     UI_Folder.ChildAdded:Connect(onChildAdded)
-    remote.OnClientEvent:Connect(onClientEvent)
+    GlobalEvent.OnClientEvent:Connect(onClientEvent)
 end
-
 
 return module
