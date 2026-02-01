@@ -17,8 +17,10 @@ export type Status = {
 }
 ----------------------------------------------------------------------- CONSTRUCTION
 module.Replicated = Utils.GetEnd()
-module.TrackedInstances = {}
+module.TrackedInstances = {}::{[Instance]:string}
 module.Status = {}::{[string]:Status}
+module.TrackedSignals = {}
+module.ID_Track = {}::{[string]:Instance}
 ----------------------------------------------------------------------- CASE SWITCH
 local Switch = {
     ["instanceFound"] = function(Player:Player, StatusID:string)
@@ -76,6 +78,23 @@ local function CreateStatus(id:string, OwnedObject:Instance, Owner:Player)
     module.Status[id] = Status
     return Status
 end
+
+local function SetupObject(Instance:Instance)
+    if not module.TrackedInstances[Instance] then
+        local ID = Utils.GenerateGUID()
+        module.TrackedInstances[Instance] = ID
+        module.ID_Track[ID] = Instance
+        module.TrackedSignals[ID] = Instance.Destroying:Connect(function()
+            module.UnReplicate(Instance, Players:GetPlayers())
+            module.TrackedSignals[ID]:Disconnect()
+            module.ID_Track[ID] = nil
+            module.TrackedSignals[ID] = nil
+            module.TrackedInstances[Instance] = nil
+            Instance = nil
+            ID = nil
+        end)
+    end
+end
 ----------------------------------------------------------------------- EVENTS
 Event.OnServerEvent:Connect(OnEventRecieve)
 for _, item in ipairs(Players:GetPlayers()) do
@@ -90,9 +109,7 @@ function module.ReplicateTo(Instance:Instance, Targets:{Player}):{Status}
         warn("[REPLIT] - Instances are recommended to be kept in server storage.")
     end
     local Ret = {}
-    if not module.TrackedInstances[Instance] then
-        module.TrackedInstances[Instance] = Utils.GenerateGUID()
-    end
+    SetupObject(Instance)
     for _, item in ipairs(Targets) do
         if not item.PlayerGui then continue end
         local PlayerTargetFolder = item.PlayerGui:WaitForChild(Names.ReplicationTarget)
@@ -108,8 +125,7 @@ end
 
 function module.UnReplicate(Instance:Instance, Targets:{Player})
     if not module.TrackedInstances[Instance] then
-        module.TrackedInstances[Instance] = Utils.GenerateGUID()
-        return -- never been replicated before
+        return
     end
     local ID:string = module.TrackedInstances[Instance]
     for _, item in ipairs(Targets) do
