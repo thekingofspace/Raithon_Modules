@@ -1,10 +1,12 @@
+local Players = game:GetService("Players")
 ----------------------------------------------------------------------- VARS
 local Signals = require(script.Parent:WaitForChild("Signals"))
 local SharedNames = require(script.Parent:WaitForChild("NameSpaces"))
 local Utils = require(script.Parent:WaitForChild("Utils"))
 
+local Player = Players.LocalPlayer
 local Event = Utils.GetEvent()
-local ReplicatedFolder = Utils.GetEnd()
+local ReplicatedCache = Player.PlayerGui:WaitForChild(SharedNames.ReplicationTarget, 500)
 
 ----------------------------------------------------------------------- TYPES
 type module = {
@@ -22,13 +24,13 @@ local module = {}::module
 module.Replicated = Utils.GetEnd()
 module.TrackedInstances = {}
 module.TrackedEvents = {}
-module.UID_Regsitry = {}
+module.UID_Registry = {}
 module.OnReplication = Signals()
 
 ----------------------------------------------------------------------- CASE SWITCH
 local Switch = {
     RemoveInstance = function(ID:string)
-        local Instance = module.UID_Regsitry[ID]
+        local Instance = module.UID_Registry[ID]
         if not Instance then return end
         Instance:Destroy()
     end;
@@ -54,7 +56,7 @@ local function OnReplication(Child:Instance)
         Config:Destroy()
     end
 
-    if module.UID_Regsitry[ConfigInfo.UID] then return end
+    if module.UID_Registry[ConfigInfo.UID] then return end
     
     local NewChild = Child:Clone()
     NewChild.Parent = module.Replicated
@@ -63,7 +65,7 @@ local function OnReplication(Child:Instance)
     
     module.UID_Registry[NewChild] = ConfigInfo.UID
     module.TrackedInstances[ConfigInfo.UID] = NewChild
-    module.Events[NewChild] = NewChild.Destroying:Once(function()        
+    module.TrackedEvents[NewChild] = NewChild.Destroying:Once(function()        
         local UID:string = module.UID_Registry[NewChild]
         module.Events[NewChild] = nil
         module.UID_Registry[NewChild] = nil
@@ -78,7 +80,7 @@ local function OnEventRecieve(Topic:string, ...)
 end
 
 ----------------------------------------------------------------------- EVENTS
-ReplicatedFolder.ChildAdded:Connect(OnReplication)
+ReplicatedCache.ChildAdded:Connect(OnReplication)
 Event.OnClientEvent:Connect(OnEventRecieve)
 
 return module

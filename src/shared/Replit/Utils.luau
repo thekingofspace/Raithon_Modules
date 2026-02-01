@@ -25,14 +25,14 @@ end
 
 function module.GetEvent():RemoteEvent
     if RunService:IsClient() == true then
-        return game.ReplicatedStorage:WaitForChild(SharedNames.EventName)
+        return script.Parent:FindFirstChild(SharedNames.EventName)
     end
 
     local Event = ReplicatedStorage:FindFirstChild(SharedNames.EventName)
     if not Event then
         Event = Instance.new("RemoteEvent")
         Event.Name = SharedNames.EventName
-        Event.Parent = game.ReplicatedStorage
+        Event.Parent = script.Parent
     end
     return Event
 end

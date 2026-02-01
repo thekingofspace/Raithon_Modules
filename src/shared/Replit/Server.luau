@@ -62,10 +62,10 @@ local function UpdatePlayer(Player:Player)
 end
 
 local function playerLeft(Player:Player)
-    for I, Status in pairs(module.Status) do
+    for ID, Status in pairs(module.TrackedStatuses) do
         if Status.Owner == Player then
             Status.Status = "dead"
-            module.Status[I] = nil
+            module.TrackedStatuses[ID] = nil
             Status.TrackedObject:Destroy()
             Status.TrackedObject = nil
             Status.Changed:Fire()
@@ -85,7 +85,7 @@ local function CreateStatus(id:string, OwnedObject:Instance, Owner:Player)
         Owner = Owner;
         Changed = Signals();
     }
-    module.Status[id] = Status
+    module.TrackedStatuses[id] = Status
     return Status
 end
 
