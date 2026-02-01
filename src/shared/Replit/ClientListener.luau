@@ -12,7 +12,7 @@ export type Config = {
 ---------------------------------------------------------------------------- VARS
 local SharedUtils = require(script.Parent:WaitForChild("SharedUtils"))
 local player = Players.LocalPlayer
-local playerGui = player:FindFirstChildOfClass("PlayerGui")
+local playerGui = player:FindFirstChildOfClass("PlayerGui") -- TODO: Why do we need this can we not just do player.PlayerGui?
 local UI_Folder:Folder = playerGui:WaitForChild("REPLIT_REPLICATION", 500)
 
 local ReplitFolder = Instance.new("Folder")
@@ -58,7 +58,7 @@ local function onChildAdded(child:Instance)
 end
 
 local handlers = {
-    ReplicateChanges = function(options)
+    ReplicateChanges = function(options) -- TODO: add a strong type to options for easier working with.
         local props = options.ChangedProperties
         local id = options.InstanceID
         local instance = module.Instances[id]
