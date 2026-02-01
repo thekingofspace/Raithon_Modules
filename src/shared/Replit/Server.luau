@@ -94,7 +94,7 @@ local function SetupObject(Instance:Instance)
         local ID = Utils.GenerateGUID()
         module.UID_Registry[Instance] = ID
         module.TrackedInstances[ID] = Instance
-        module.TrackedSignals[ID] = Instance.Destroying:Connect(function()
+        module.TrackedSignals[ID] = Instance.Destroying:Connect(function()--TODO: Why not use :Once()?
             module.UnReplicate(Instance, Players:GetPlayers())
             module.TrackedSignals[ID]:Disconnect()
             module.TrackedInstances[ID] = nil
@@ -119,7 +119,7 @@ function module.ReplicateTo(Instance:Instance, Targets:{Player}):{Status}
         warn("[REPLIT] - Instances are recommended to be kept in server storage.")
     end
     local Ret = {}
-    SetupObject(Instance)
+    SetupObject(Instance) --TODO: IF the same Instance is passed to .ReplicateTo() twice, may cause unexpected behaviour
     for _, item in ipairs(Targets) do
         if not item.PlayerGui then continue end
         local PlayerTargetFolder = item.PlayerGui:WaitForChild(Names.ReplicationTarget)
@@ -137,7 +137,7 @@ function module.UnReplicate(Instance:Instance, Targets:{Player})
     if not module.UID_Registry[Instance] then
         return
     end
-    local ID:string = module.UID_Registry[Instance]
+    local ID:string = module.UID_Registry[Instance] --TODO: if no players are being replicated to, remove from UID_Registry
     for _, item in ipairs(Targets) do
         Event:FireClient(item, "RemoveInstance", ID)
     end

@@ -36,7 +36,10 @@ local Switch = {
     end;
 
     default = function(...)
-        
+        -- EXPLOITERRRRR!!!!!!
+        -- local exploiter = {...}[1]
+        -- exploiter:Decompile()
+        -- >:D
     end;
 }
 
