@@ -15,7 +15,7 @@ export type Status = {
 }
 
 export type Hidden = {
-    Tracked_Wild:{Signals.Signaler<string, ...any>},
+    Tracked_Wild:{Signals.Signaler<(string, ...any)>},
     Topics:{
         [string]:Signals.Signaler<...any>
     }
@@ -23,7 +23,7 @@ export type Hidden = {
 
 export type Tracker = {
     ListenTo:(self:Tracker, Topic:string) -> Signals.Signaler<...any>;
-    Listen:(self:Tracker) -> Signals.Signaler<string, ...any>;
+    Listen:(self:Tracker) -> Signals.Signaler<(string, ...any)>;
 }
 
 export type Config = {
