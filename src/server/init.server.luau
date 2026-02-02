@@ -4,9 +4,10 @@ local ServerStorage = game:GetService("ServerStorage")
 
 local Replit = require(ReplicatedStorage.Shared.Replit)
 
-task.wait(5)
+task.wait(2)
 
 Replit.ReplicateTo(ServerStorage.ClickDetector, Players:GetPlayers())
 
-task.wait(5)
-ServerStorage.ClickDetector:Destroy()
+task.wait(6)
+Replit.ReplicateTo(ServerStorage.ClickDetector, Players:GetPlayers())
+print("second")

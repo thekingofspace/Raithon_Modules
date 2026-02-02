@@ -12,19 +12,21 @@ type module = {
 
     TrackedInstances: {[string]:Instance};
     TrackedStatuses: {[string]:Utils.Status};
-    TrackedSignals: {[string]:RBXScriptConnection};
     UID_Registry: {[Instance]:string};
+    TrackedPlayers:{[Player]:{
+        [string]:boolean
+    }}
 }
 ----------------------------------------------------------------------- CONSTRUCTION
 local module = {}::module
 module.Replicated = Utils.GetEnd()
 module.TrackedInstances = {}
 module.TrackedStatuses = {}
-module.TrackedSignals = {}
 module.UID_Registry = {}
+module.TrackedPlayers = {}
 ----------------------------------------------------------------------- CASE SWITCH
 local Switch = {
-    ["instanceFound"] = function(Player:Player, StatusID:string)
+    ["instanceFound"] = function(Player:Player, StatusID:string, InstanceID:string)
         local Status = module.TrackedStatuses[StatusID]
         if not Status then return end
         module.TrackedStatuses[StatusID] = nil
@@ -32,6 +34,10 @@ local Switch = {
         Status.TrackedObject:Destroy()
         Status.TrackedObject = nil
         Status.Changed:Fire()
+        module.TrackedPlayers[Player][InstanceID] = true
+    end,
+    ["instanceRemove"] = function(Player:Player, InstanceID:string)
+        module.TrackedPlayers[Player][InstanceID] = nil
     end,
     default = function(Player:Player, ...)
         
@@ -53,6 +59,7 @@ local function OnEventRecieve(Player:Player, Topic:string, ...)
 end
 
 local function UpdatePlayer(Player:Player)
+    module.TrackedPlayers[Player] = {}
     if Player.PlayerGui:FindFirstChild(Names.ReplicationTarget) then
         return
     end
@@ -75,6 +82,7 @@ local function playerLeft(Player:Player)
     if playerGui then
         playerGui:FindFirstChild(Names.ReplicationTarget):Destroy()
     end
+    module.TrackedPlayers[Player] = nil
 end
 
 local function CreateStatus(id:string, OwnedObject:Instance, Owner:Player)
@@ -94,11 +102,9 @@ local function SetupObject(Instance:Instance)
         local ID = Utils.GenerateGUID()
         module.UID_Registry[Instance] = ID
         module.TrackedInstances[ID] = Instance
-        module.TrackedSignals[ID] = Instance.Destroying:Connect(function()--TODO: Why not use :Once()?
+        Instance.Destroying:Once(function()
             module.UnReplicate(Instance, Players:GetPlayers())
-            module.TrackedSignals[ID]:Disconnect()
             module.TrackedInstances[ID] = nil
-            module.TrackedSignals[ID] = nil
             module.UID_Registry[Instance] = nil
             Instance = nil::any
             ID = nil
@@ -119,13 +125,16 @@ function module.ReplicateTo(Instance:Instance, Targets:{Player}):{Status}
         warn("[REPLIT] - Instances are recommended to be kept in server storage.")
     end
     local Ret = {}
-    SetupObject(Instance) --TODO: IF the same Instance is passed to .ReplicateTo() twice, may cause unexpected behaviour
+    local TrackedPlayers = module.TrackedPlayers
+    SetupObject(Instance) --TODO(CHECK BELOW): IF the same Instance is passed to .ReplicateTo() twice, may cause unexpected behaviour
+    -- resolved now it can only replicate once per player
     for _, item in ipairs(Targets) do
-        if not item.PlayerGui then continue end
+        local ID = module.UID_Registry[Instance]
+        if not item.PlayerGui or TrackedPlayers[item][ID] == true then continue end
         local PlayerTargetFolder = item.PlayerGui:WaitForChild(Names.ReplicationTarget)
         local PlayerObject = Instance:Clone()
         local Status = CreateStatus(Utils.GenerateGUID(), PlayerObject, item)
-        Utils.ToConfig(module.UID_Registry[Instance], Status.StatusID).Parent = PlayerObject
+        Utils.ToConfig(ID, Status.StatusID).Parent = PlayerObject
         PlayerObject.Parent = PlayerTargetFolder
         table.insert(Ret, Status)
     end
@@ -137,7 +146,8 @@ function module.UnReplicate(Instance:Instance, Targets:{Player})
     if not module.UID_Registry[Instance] then
         return
     end
-    local ID:string = module.UID_Registry[Instance] --TODO: if no players are being replicated to, remove from UID_Registry
+    local ID:string = module.UID_Registry[Instance] --if no players are being replicated to, remove from UID_Registry
+    -- No we keep it cached unless destroyed, this prevents having to use later constructors saving on memory.
     for _, item in ipairs(Targets) do
         Event:FireClient(item, "RemoveInstance", ID)
     end

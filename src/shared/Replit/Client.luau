@@ -13,7 +13,6 @@ type module = {
     Replicated: Folder;
     
     TrackedInstances: {[string]:Instance};
-    TrackedEvents: {[string]:RBXScriptConnection};
     UID_Registry: {[Instance]:string};
     
     OnReplication: Signals.Signaler<>
@@ -23,7 +22,6 @@ type module = {
 local module = {}::module
 module.Replicated = Utils.GetEnd()
 module.TrackedInstances = {}
-module.TrackedEvents = {}
 module.UID_Registry = {}
 module.OnReplication = Signals()
 
@@ -59,18 +57,18 @@ local function OnReplication(Child:Instance)
         Config:Destroy()
     end
 
-    if module.UID_Registry[ConfigInfo.UID] then return end
+    if module.TrackedInstances[ConfigInfo.UID] then return end
     
     local NewChild = Child:Clone()
     NewChild.Parent = module.Replicated
 
-    Event:FireServer("instanceFound", ConfigInfo.StatusID)
+    Event:FireServer("instanceFound", ConfigInfo.StatusID, ConfigInfo.UID)
     
     module.UID_Registry[NewChild] = ConfigInfo.UID
     module.TrackedInstances[ConfigInfo.UID] = NewChild
-    module.TrackedEvents[NewChild] = NewChild.Destroying:Once(function()        
+    NewChild.Destroying:Once(function()        
         local UID:string = module.UID_Registry[NewChild]
-        module.Events[NewChild] = nil
+        Event:FireServer("instanceRemove", UID)
         module.UID_Registry[NewChild] = nil
         module.TrackedInstances[UID] = nil
         NewChild = nil
