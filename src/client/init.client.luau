@@ -3,7 +3,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Replit = require(ReplicatedStorage.Shared.Replit)
 
 Replit.OnReplication:Once(function(Child)
-    task.wait(3)
+    local Track = Replit.Track(Child)
 
-    Child:Destroy()
+    Track:Listen():Connect(function(Topic, ...)
+        print(Topic, ...)
+    end)
 end)

@@ -5,13 +5,17 @@ local Signals = require("@self/Signals")
 local Utils = require(script.Utils)
 
 export type Status = Utils.Status
+export type Tracker = Utils.Tracker
 
 export type Replit = {
     Replicated:Folder,
     OnReplication:Signals.Signaler<Instance>,
 
     ReplicateTo:(Instance:Instance, Targets:{Player}) -> {Status},
-    UnReplicate:(Instance:Instance, Targets:{Player}) -> ()
+    UnReplicate:(Instance:Instance, Targets:{Player}) -> (),
+    ReplicateChanges:(Instance:Instance, Targets:{Player}, Topic:string, ...any) -> (),
+
+    Track:(Target:Instance) -> Tracker,
 }
 
 return TargetModule::Replit

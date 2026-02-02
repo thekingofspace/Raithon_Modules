@@ -153,4 +153,14 @@ function module.UnReplicate(Instance:Instance, Targets:{Player})
     end
 end
 
+function module.ReplicateChanges(Instance:Instance, Targets:{Player}, Topic:string, ...)
+    if not module.UID_Registry[Instance] then
+        return
+    end
+    local ID:string = module.UID_Registry[Instance]
+    for _, item in ipairs(Targets) do
+        Event:FireClient(item, "UpdateInstance", ID,  Topic, ...)
+    end
+end
+
 return module

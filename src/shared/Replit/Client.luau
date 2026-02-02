@@ -14,6 +14,8 @@ type module = {
     
     TrackedInstances: {[string]:Instance};
     UID_Registry: {[Instance]:string};
+    Trackers:{[Instance]:Utils.Tracker},
+    Track:(Target:Instance) -> Utils.Tracker,
     
     OnReplication: Signals.Signaler<>
 }
@@ -23,7 +25,16 @@ local module = {}::module
 module.Replicated = Utils.GetEnd()
 module.TrackedInstances = {}
 module.UID_Registry = {}
+module.Trackers = {}
 module.OnReplication = Signals()
+
+function module.Track(Target:Instance)
+    if module.Trackers[Target] then return module.Trackers[Target] end
+
+    local Tracker = Utils.NewTracker()
+    module.Trackers[Target] = Tracker
+    return Tracker
+end
 
 ----------------------------------------------------------------------- CASE SWITCH
 local Switch = {
@@ -32,6 +43,20 @@ local Switch = {
         if not Instance then return end
         Instance:Destroy()
     end;
+
+    UpdateInstance = function(ID:string, Topic:string, ...)
+        local Target = module.TrackedInstances[ID]
+        local Tracker:Utils.Tracker & Utils.Hidden = module.Trackers[Target]
+        if Target and Tracker then
+            local Section = Tracker.Topics[Topic]
+            if Section then
+                Tracker.Topics[Topic]:Fire(...)
+            end
+            for _, item in ipairs(Tracker.Tracked_Wild) do
+                item:Fire(Topic, ...)
+            end
+        end
+    end,
 
     default = function(...)
         -- EXPLOITERRRRR!!!!!!
@@ -68,6 +93,7 @@ local function OnReplication(Child:Instance)
     module.TrackedInstances[ConfigInfo.UID] = NewChild
     NewChild.Destroying:Once(function()        
         local UID:string = module.UID_Registry[NewChild]
+        module.Trackers[NewChild] = nil
         Event:FireServer("instanceRemove", UID)
         module.UID_Registry[NewChild] = nil
         module.TrackedInstances[UID] = nil

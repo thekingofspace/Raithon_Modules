@@ -8,6 +8,6 @@ task.wait(2)
 
 Replit.ReplicateTo(ServerStorage.ClickDetector, Players:GetPlayers())
 
-task.wait(6)
-Replit.ReplicateTo(ServerStorage.ClickDetector, Players:GetPlayers())
-print("second")
+task.wait(3)
+
+Replit.ReplicateChanges(ServerStorage.ClickDetector, Players:GetPlayers(), "test43", "test")

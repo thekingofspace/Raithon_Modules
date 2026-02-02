@@ -14,6 +14,18 @@ export type Status = {
     Changed: Signals.Signaler<any>
 }
 
+export type Hidden = {
+    Tracked_Wild:{Signals.Signaler<string, ...any>},
+    Topics:{
+        [string]:Signals.Signaler<...any>
+    }
+}
+
+export type Tracker = {
+    ListenTo:(self:Tracker, Topic:string) -> Signals.Signaler<...any>;
+    Listen:(self:Tracker) -> Signals.Signaler<string, ...any>;
+}
+
 export type Config = {
     UID:string;
     StatusID:string
@@ -64,6 +76,29 @@ function module.FromConfig(Config:Configuration):Config
         UID = Config:GetAttribute("UID");
         StatusID = Config:GetAttribute("StatusID")
     }
+end
+
+local Tracker = {}
+Tracker.__index = Tracker
+
+function Tracker.Listen(self:Tracker & Hidden)
+    local Signal = Signals()
+    table.insert(self.Tracked_Wild, Signal)
+    return Signal
+end
+
+function Tracker.ListenTo(self:Tracker & Hidden, Topic:string)
+    if self.Topics[Topic] then return self.Topics[Topic] end
+
+    local Signal = Signals()
+    self.Topics[Topic] = Signal
+    return Signal
+end
+
+function module.NewTracker():Tracker
+    local self = setmetatable({Tracked_Wild = {}, Topics = {}}, Tracker)::any
+
+    return self
 end
 
 return module
