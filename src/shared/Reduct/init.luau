@@ -7,7 +7,7 @@ local Utils = require(script.Utils)
 export type Status = Utils.Status
 export type Tracker = Utils.Tracker
 
-export type Replit = {
+export type Reduct = {
     Replicated:Folder,
     OnReplication:Signals.Signaler<Instance>,
 
@@ -18,4 +18,4 @@ export type Replit = {
     Track:(Target:Instance) -> Tracker,
 }
 
-return TargetModule::Replit
+return TargetModule::Reduct
