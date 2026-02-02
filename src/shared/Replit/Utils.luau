@@ -15,7 +15,7 @@ export type Status = {
 }
 
 export type Hidden = {
-    Tracked_Wild:{Signals.Signaler<(string, ...any)>},
+    Tracked_Wild:Signals.Signaler<(string, ...any)>,
     Topics:{
         [string]:Signals.Signaler<...any>
     }
@@ -82,9 +82,7 @@ local Tracker = {}
 Tracker.__index = Tracker
 
 function Tracker.Listen(self:Tracker & Hidden)
-    local Signal = Signals()
-    table.insert(self.Tracked_Wild, Signal)
-    return Signal
+    return self.Tracked_Wild
 end
 
 function Tracker.ListenTo(self:Tracker & Hidden, Topic:string)
@@ -96,7 +94,7 @@ function Tracker.ListenTo(self:Tracker & Hidden, Topic:string)
 end
 
 function module.NewTracker():Tracker
-    local self = setmetatable({Tracked_Wild = {}, Topics = {}}, Tracker)::any
+    local self = setmetatable({Topics = {}, Tracked_Wild = Signals()}, Tracker)::any
 
     return self
 end

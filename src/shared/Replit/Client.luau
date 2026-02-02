@@ -52,9 +52,7 @@ local Switch = {
             if Section then
                 Tracker.Topics[Topic]:Fire(...)
             end
-            for _, item in ipairs(Tracker.Tracked_Wild) do
-                item:Fire(Topic, ...)
-            end
+            Tracker.Tracked_Wild:Fire(Topic, ...)
         end
     end,
 
