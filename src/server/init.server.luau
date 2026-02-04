@@ -2,12 +2,12 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
-local Replit = require(ReplicatedStorage.Shared.Replit)
+local Reduct = require(ReplicatedStorage.Shared.Reduct)
 
 task.wait(2)
 
-Replit.ReplicateTo(ServerStorage.ClickDetector, Players:GetPlayers())
+Reduct.ReplicateTo(ServerStorage.ClickDetector, Players:GetPlayers())
 
 task.wait(3)
 
-Replit.ReplicateChanges(ServerStorage.ClickDetector, Players:GetPlayers(), "test43", "test")
+Reduct.ReplicateChanges(ServerStorage.ClickDetector, Players:GetPlayers(), "test43", "test")
