@@ -19,6 +19,7 @@ export type Reduct = {
     UnReplicate:(Instance:Instance, Targets:{Player}) -> (),
     ReplicateChanges:(Instance:Instance, Targets:{Player}, Topic:string, ...any) -> (),
     IsReplicated:(Instance:Instance, Targets:{Player}) -> {[Player]:boolean},
+    IsReplicatedAsync:(Instance:Instance, Targets:{Player}) -> {[Player]:boolean}, -- this runs using :wait to essentially ask the client if they have the target instance.
 
     Track:(Target:Instance) -> Tracker,
 }

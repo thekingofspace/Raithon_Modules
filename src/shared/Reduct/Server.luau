@@ -13,6 +13,7 @@ type module = {
     TrackedInstances: {[string]:Instance};
     TrackedStatuses: {[string]:Utils.Status};
     UID_Registry: {[Instance]:string};
+    Async_Requests:{[Player]:{[string]:{thread}}};
     TrackedPlayers:{[Player]:{
         [string]:boolean
     }}
@@ -24,6 +25,7 @@ module.TrackedInstances = {}
 module.TrackedStatuses = {}
 module.UID_Registry = {}
 module.TrackedPlayers = {}
+module.Async_Requests = {}
 ----------------------------------------------------------------------- CASE SWITCH
 local Switch = {
     ["instanceFound"] = function(Player:Player, StatusID:string, InstanceID:string)
@@ -38,6 +40,16 @@ local Switch = {
     end,
     ["instanceRemove"] = function(Player:Player, InstanceID:string)
         module.TrackedPlayers[Player][InstanceID] = nil
+    end,
+    ["asyncUpdate"] = function(Player:Player, InstanceID:string, Exists:boolean)
+        local PlayerThreads = module.Async_Requests[Player]
+        if PlayerThreads and PlayerThreads[InstanceID] then
+            for _, item in ipairs(PlayerThreads[InstanceID]) do
+                if coroutine.status(item) == "suspended" then
+                    coroutine.resume(item, typeof(Exists) == "boolean" and Exists or false)
+                end
+            end
+        end
     end,
     default = function(Player:Player, ...)
         
@@ -60,12 +72,18 @@ end
 
 local function UpdatePlayer(Player:Player)
     module.TrackedPlayers[Player] = {}
+    module.Async_Requests[Player] = {}
     if Player.PlayerGui:FindFirstChild(Names.ReplicationTarget) then
         return
     end
     local TargetFolder = Instance.new("Folder")
     TargetFolder.Name = Names.ReplicationTarget
     TargetFolder.Parent = Player.PlayerGui
+end
+
+local function Cancel(Thread:thread)
+    task.wait(10)
+    coroutine.resume(Thread, false)
 end
 
 local function playerLeft(Player:Player)
@@ -78,11 +96,17 @@ local function playerLeft(Player:Player)
             Status.Changed:Fire()
         end
     end
+    for _, Cluster in pairs(module.Async_Requests[Player]) do
+        for _, thread in ipairs(Cluster) do
+            coroutine.resume(thread, false)
+        end
+    end
     local playerGui = Player:FindFirstChildOfClass("PlayerGui")
     if playerGui then
         playerGui:FindFirstChild(Names.ReplicationTarget):Destroy()
     end
     module.TrackedPlayers[Player] = nil
+    module.Async_Requests[Player] = nil
 end
 
 local function CreateStatus(id:string, OwnedObject:Instance, Owner:Player)
@@ -170,6 +194,30 @@ function module.IsReplicated(Instance:Instance, Targets:{Player}):{[Player]:bool
     local TrackedPlayers = module.TrackedPlayers
     for _, Player in ipairs(Targets) do
         SendBack[Player] = TrackedPlayers[Player][ID] == true -- can be nil so turn to bool.
+    end
+    return SendBack
+end
+
+function module.IsReplicatedAsync(Instance:Instance, Targets:{Player}):{[Player]:boolean}
+    local SendBack = {}
+    SetupObject(Instance)
+    local ID = module.UID_Registry[Instance]
+    for _, Player in ipairs(Targets) do
+        local Section = module.Async_Requests[Player]
+        if not module.Async_Requests[Player] then continue end
+        local Thread = coroutine.running()
+        Section[ID] = Section[ID] or {}
+        table.insert(Section[ID], Thread)
+        local OtherThread = coroutine.create(Cancel)
+        coroutine.resume(OtherThread, Thread)
+        Event:FireClient(Player, "AsyncCheck", ID)
+        SendBack[Player] = coroutine.yield()
+        if coroutine.status(OtherThread) ~= "dead" then
+            coroutine.close(OtherThread)
+        end
+        if SendBack[Player] ~= true and module.TrackedPlayers[Player][ID] == true then
+            module.TrackedPlayers[Player][ID] = nil
+        end
     end
     return SendBack
 end
