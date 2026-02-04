@@ -163,4 +163,15 @@ function module.ReplicateChanges(Instance:Instance, Targets:{Player}, Topic:stri
     end
 end
 
+function module.IsReplicated(Instance:Instance, Targets:{Player}):{[Player]:boolean}
+    local SendBack = {}
+    SetupObject(Instance)
+    local ID = module.UID_Registry[Instance]
+    local TrackedPlayers = module.TrackedPlayers
+    for _, Player in ipairs(Targets) do
+        SendBack[Player] = TrackedPlayers[Player][ID] == true -- can be nil so turn to bool.
+    end
+    return SendBack
+end
+
 return module
