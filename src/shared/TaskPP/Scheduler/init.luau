@@ -1,9 +1,12 @@
+----------------------------------------------------------------------- SERVICES
 local RunService = game:GetService("RunService")
 ----------------------------------------------------------------------- VARS
 local LinkedList = require(script.Parent.LinkedList)
 local TaskPPConfigs = require(script.Parent.TaskPPConfigs)
+local WorkerPool = require(script.WorkerPool)
 
 local interval = TaskPPConfigs.BucketInterval
+
 ----------------------------------------------------------------------- TYPES
 export type Scheduler = {
     Buckets:{
@@ -19,7 +22,7 @@ export type Scheduler = {
 }
 
 export type Process = {
-    thread: thread;
+    func: ()->();
     timestamp: number;
 }
 
@@ -35,13 +38,9 @@ local function getBucketIndex(timestamp:number?)
     return (timestamp//interval)*interval
 end
 
-local function createThread(func:()->()):thread -- TODO: to be changed
-    return coroutine.create(func)
-end
-
-local function createProcess(thread:thread, timestamp:number):Process -- TODO: to be changed
+local function createProcess(func:()->(), timestamp:number):Process -- TODO: to be changed
     return {
-        thread = thread;
+        func = func;
         timestamp = timestamp; 
     }
 end
@@ -55,7 +54,7 @@ local function onHeartbeat()
     if lastBucket then
         if lastBucket.Length ~= 0 then -- resume any processes remaining in the old bucket
             for link, process in LinkedList.IterateForwards(lastBucket) do
-                coroutine.resume(process.thread)
+                WorkerPool.AssignWorker(process.func)
             end
         end
         LinkedList.DestroyList(lastBucket) -- destroy the passed bucket
@@ -65,13 +64,13 @@ local function onHeartbeat()
     if bucket then -- resume threads whose timestamp has been passed in current bucket
         for link, process in LinkedList.IterateForwards(bucket) do
             if process.timestamp > timestamp then break end
-            coroutine.resume(process.thread)
+            WorkerPool.AssignWorker(process.func)
+            LinkedList.RemoveLink(link)
         end
     end
 end
 
 ----------------------------------------------------------------------- MODULE
-
 function Scheduler.Start()
     Scheduler.TimeOffset += os.clock() - Scheduler.LastConnectedTime
     Scheduler.RunConnection = RunService.Heartbeat:Connect(onHeartbeat)
@@ -83,13 +82,12 @@ function Scheduler.Stop()
     Scheduler.RunConnection = nil
 end
 
-function Scheduler.AddToQueue(functionOrThread: ()->()|thread, delay:number?)
+function Scheduler.AddToQueue(func: ()->(), delay:number?)
     local timestamp = os.clock() + (delay or 0);
     local bucketindex = getBucketIndex(timestamp)
     Scheduler.Buckets[bucketindex] = Scheduler.Buckets[bucketindex] or LinkedList.new()
-    
-    local thread = typeof(functionOrThread) == "function" and createThread(functionOrThread) or functionOrThread
-    local process = createProcess(thread, timestamp)
+
+    local process = createProcess(func, timestamp)
     
     -- finds the first link with timestamp greater than current
     local link = LinkedList.FindLink(Scheduler.Buckets[bucketindex], process, function(a: Process, b: Process): boolean  
